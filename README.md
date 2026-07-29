@@ -1,7 +1,11 @@
-# Student Management System
 
-A Student Management System built with Laravel 12 that provides complete student management with CRUD operations, search, filtering, sorting, pagination, dashboard statistics, and CSV export.
+# 🎓 Student Management System
 
+<p align="center">
+  <img src="screenshots/project-cover.png" alt="Student Management System Project Cover" width="100%">
+</p>
+
+A modern Student Management System built with Laravel 12 featuring complete CRUD operations, search, filtering, sorting, dashboard statistics, pagination, and CSV export.
 ## Features
 
 - Create Student
