@@ -1,148 +1,52 @@
-# 🎓 Student Management System
+# Student Management System
 
-A modern Student Management System built with Laravel 12 and Bootstrap 5.
+A Student Management System built with Laravel 12 that provides complete student management with CRUD operations, search, filtering, sorting, pagination, dashboard statistics, and CSV export.
 
-This project demonstrates CRUD operations, searching, filtering, sorting, pagination, dashboard statistics, and CSV export.
+## Features
 
----
+- Create Student
+- Update Student
+- Delete Student
+- Search Students
+- Filter by Status
+- Sort by Student Number
+- Pagination
+- Dashboard Statistics
+- Export CSV
 
-## ✨ Features
-
-- ✅ Add Student
-- ✅ Edit Student
-- ✅ Delete Student
-- ✅ Student Validation
-- ✅ Success Messages
-- ✅ Dashboard Statistics
-- ✅ Search Students
-- ✅ Filter by Status
-- ✅ Sort Columns
-- ✅ Pagination
-- ✅ Export to CSV
-- ✅ Responsive Design
-- ✅ Bootstrap 5 UI
-
----
-
-## 🛠 Technologies
+## Technologies
 
 - Laravel 12
-- PHP 8+
+- PHP 8
+- MySQL
 - Bootstrap 5
-- SQLite
 - Blade
-- Eloquent ORM
+- Git
+- GitHub
 
----
-
-## 📂 Project Structure
-
-```
-app/
-resources/
-routes/
-database/
-public/
-```
-
----
-
-## 🚀 Installation
-
-Clone the repository
+## Installation
 
 ```bash
-git clone https://github.com/yourusername/student-management.git
-```
+git clone https://github.com/ibtisam5/student-management.git
 
-Go to project folder
-
-```bash
 cd student-management
-```
 
-Install dependencies
-
-```bash
 composer install
-```
 
-Create environment file
-
-```bash
 cp .env.example .env
-```
 
-Generate application key
-
-```bash
 php artisan key:generate
-```
 
-Run migrations
-
-```bash
 php artisan migrate
-```
 
-Start server
-
-```bash
 php artisan serve
 ```
 
-Visit
+## Author
 
-```
-http://127.0.0.1:8000
-```
-
----
-
-## 📸 Screenshots
-
-You can add screenshots here later.
-
-Example:
-
-```
-screenshots/dashboard.png
-screenshots/create.png
-screenshots/search.png
-```
-
----
-
-## 📈 Project Highlights
-
-This project demonstrates practical Laravel development skills including:
-
-- MVC Architecture
-- Routing
-- Controllers
-- Eloquent ORM
-- Blade Templates
-- Form Validation
-- Pagination
-- Search & Filtering
-- Sorting
-- CSV Export
-- Responsive UI Design
-
----
-
-## 👩‍💻 Developer
-
-**Ibtisam Al Rawahi**
+**Ibtisam Alrawahi**
 
 Bachelor of Computer Engineering
 
-University of Nizwa
-
-Oman 🇴🇲
-
 GitHub:
-https://github.com/yourusername
-
-LinkedIn:
-https://linkedin.com/in/yourprofile
+https://github.com/ibtisam5
