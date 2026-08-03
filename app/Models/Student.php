@@ -36,6 +36,7 @@ public function courses(): BelongsToMany
         ->withTimestamps();
 }
 
+
 public function aiAnalyses(): HasMany
 {
     return $this->hasMany(AiAnalysis::class);

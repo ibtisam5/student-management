@@ -21,26 +21,31 @@ class DashboardController extends Controller
 
         $totalStudents = Student::count();
 
-        $activeStudents = Student::where(
-            'status',
-            'Active'
-        )->count();
+        $activeStudents = Student::query()
+            ->where('status', 'Active')
+            ->count();
 
         $totalCourses = Course::count();
 
-        $activeCourses = Course::where(
-            'is_active',
-            true
-        )->count();
+        $activeCourses = Course::query()
+            ->where('is_active', true)
+            ->count();
 
         $totalEnrollments = Enrollment::count();
 
         $totalAttendanceRecords = Attendance::count();
 
-        $attendedRecords = Attendance::whereIn(
-            'status',
-            ['Present', 'Late']
-        )->count();
+        $totalGrades = Grade::count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attendance statistics
+        |--------------------------------------------------------------------------
+        */
+
+        $attendedRecords = Attendance::query()
+            ->whereIn('status', ['Present', 'Late'])
+            ->count();
 
         $attendanceRate = $totalAttendanceRecords > 0
             ? round(
@@ -48,6 +53,24 @@ class DashboardController extends Controller
                 1
             )
             : 0;
+
+        $attendanceDistribution = [
+            'Present' => Attendance::query()
+                ->where('status', 'Present')
+                ->count(),
+
+            'Absent' => Attendance::query()
+                ->where('status', 'Absent')
+                ->count(),
+
+            'Late' => Attendance::query()
+                ->where('status', 'Late')
+                ->count(),
+
+            'Excused' => Attendance::query()
+                ->where('status', 'Excused')
+                ->count(),
+        ];
 
         /*
         |--------------------------------------------------------------------------
@@ -62,7 +85,8 @@ class DashboardController extends Controller
         $averageGrade = $allGrades->isNotEmpty()
             ? round(
                 $allGrades->average(
-                    fn (Grade $grade) => $grade->percentage()
+                    fn (Grade $grade): float =>
+                        $grade->percentage()
                 ),
                 1
             )
@@ -70,7 +94,7 @@ class DashboardController extends Controller
 
         $passedGrades = $allGrades
             ->filter(
-                fn (Grade $grade) =>
+                fn (Grade $grade): bool =>
                     $grade->percentage() >= 60
             )
             ->count();
@@ -84,30 +108,51 @@ class DashboardController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Attendance distribution
+        | Grade distribution for charts
         |--------------------------------------------------------------------------
         */
 
-        $attendanceDistribution = [
-            'Present' => Attendance::where(
-                'status',
-                'Present'
-            )->count(),
+        $gradeDistribution = [
+            '90–100' => $allGrades
+                ->filter(
+                    fn (Grade $grade): bool =>
+                        $grade->percentage() >= 90
+                )
+                ->count(),
 
-            'Absent' => Attendance::where(
-                'status',
-                'Absent'
-            )->count(),
+            '80–89' => $allGrades
+                ->filter(function (Grade $grade): bool {
+                    $percentage = $grade->percentage();
 
-            'Late' => Attendance::where(
-                'status',
-                'Late'
-            )->count(),
+                    return $percentage >= 80
+                        && $percentage < 90;
+                })
+                ->count(),
 
-            'Excused' => Attendance::where(
-                'status',
-                'Excused'
-            )->count(),
+            '70–79' => $allGrades
+                ->filter(function (Grade $grade): bool {
+                    $percentage = $grade->percentage();
+
+                    return $percentage >= 70
+                        && $percentage < 80;
+                })
+                ->count(),
+
+            '60–69' => $allGrades
+                ->filter(function (Grade $grade): bool {
+                    $percentage = $grade->percentage();
+
+                    return $percentage >= 60
+                        && $percentage < 70;
+                })
+                ->count(),
+
+            'Below 60' => $allGrades
+                ->filter(
+                    fn (Grade $grade): bool =>
+                        $grade->percentage() < 60
+                )
+                ->count(),
         ];
 
         /*
@@ -131,21 +176,21 @@ class DashboardController extends Controller
         $coursePerformance = Course::query()
             ->with('enrollments.grades')
             ->get()
-            ->map(function (Course $course) {
+            ->map(function (Course $course): array {
                 $grades = $course->enrollments
                     ->flatMap(
-                        fn ($enrollment) =>
+                        fn (Enrollment $enrollment) =>
                             $enrollment->grades
                     )
                     ->filter(
-                        fn (Grade $grade) =>
+                        fn (Grade $grade): bool =>
                             (float) $grade->maximum_score > 0
                     );
 
                 $average = $grades->isNotEmpty()
                     ? round(
                         $grades->average(
-                            fn (Grade $grade) =>
+                            fn (Grade $grade): float =>
                                 $grade->percentage()
                         ),
                         1
@@ -175,23 +220,23 @@ class DashboardController extends Controller
                 'enrollments.attendances',
             ])
             ->get()
-            ->map(function (Student $student) {
+            ->map(function (Student $student): array {
                 $enrollments = $student->enrollments;
 
                 $grades = $enrollments
                     ->flatMap(
-                        fn ($enrollment) =>
+                        fn (Enrollment $enrollment) =>
                             $enrollment->grades
                     )
                     ->filter(
-                        fn (Grade $grade) =>
+                        fn (Grade $grade): bool =>
                             (float) $grade->maximum_score > 0
                     );
 
-                $averageGrade = $grades->isNotEmpty()
+                $studentAverageGrade = $grades->isNotEmpty()
                     ? round(
                         $grades->average(
-                            fn (Grade $grade) =>
+                            fn (Grade $grade): float =>
                                 $grade->percentage()
                         ),
                         1
@@ -200,40 +245,57 @@ class DashboardController extends Controller
 
                 $attendances = $enrollments
                     ->flatMap(
-                        fn ($enrollment) =>
+                        fn (Enrollment $enrollment) =>
                             $enrollment->attendances
                     );
 
                 $attended = $attendances
-                    ->whereIn(
-                        'status',
-                        ['Present', 'Late']
-                    )
+                    ->whereIn('status', ['Present', 'Late'])
                     ->count();
 
-                $attendanceRate = $attendances->isNotEmpty()
-                    ? round(
-                        ($attended / $attendances->count())
-                        * 100,
-                        1
-                    )
-                    : 0;
+                $studentAttendanceRate =
+                    $attendances->isNotEmpty()
+                        ? round(
+                            (
+                                $attended
+                                / $attendances->count()
+                            ) * 100,
+                            1
+                        )
+                        : 0;
 
                 return [
                     'id' => $student->id,
+
                     'student_number' =>
                         $student->student_number,
-                    'full_name' => $student->full_name,
-                    'major' => $student->major,
-                    'average_grade' => $averageGrade,
-                    'attendance_rate' => $attendanceRate,
-                    'courses_count' => $enrollments->count(),
+
+                    'full_name' =>
+                        $student->full_name,
+
+                    'major' =>
+                        $student->major,
+
+                    'average_grade' =>
+                        $studentAverageGrade,
+
+                    'attendance_rate' =>
+                        $studentAttendanceRate,
+
+                    'courses_count' =>
+                        $enrollments->count(),
                 ];
             });
 
+        /*
+        |--------------------------------------------------------------------------
+        | Top and at-risk students
+        |--------------------------------------------------------------------------
+        */
+
         $topStudents = $studentPerformance
             ->filter(
-                fn ($student) =>
+                fn (array $student): bool =>
                     $student['courses_count'] > 0
             )
             ->sortByDesc('average_grade')
@@ -242,7 +304,7 @@ class DashboardController extends Controller
 
         $atRiskStudents = $studentPerformance
             ->filter(
-                fn ($student) =>
+                fn (array $student): bool =>
                     $student['courses_count'] > 0
                     && (
                         $student['average_grade'] < 60
@@ -276,10 +338,13 @@ class DashboardController extends Controller
             'totalCourses',
             'activeCourses',
             'totalEnrollments',
+            'totalAttendanceRecords',
+            'totalGrades',
             'attendanceRate',
             'averageGrade',
             'passRate',
             'attendanceDistribution',
+            'gradeDistribution',
             'studentsByMajor',
             'coursePerformance',
             'topStudents',
