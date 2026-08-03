@@ -38,12 +38,43 @@ class Grade extends Model
 
     public function percentage(): float
     {
-        $maximum = (float) $this->maximum_score;
+        $maximumScore = (float) $this->maximum_score;
 
-        if ($maximum <= 0) {
+        if ($maximumScore <= 0) {
             return 0;
         }
 
-        return round(((float) $this->score / $maximum) * 100, 2);
+        return round(
+            ((float) $this->score / $maximumScore) * 100,
+            2
+        );
+    }
+
+    public function letterGrade(): string
+    {
+        $percentage = $this->percentage();
+
+        return match (true) {
+            $percentage >= 95 => 'A+',
+            $percentage >= 90 => 'A',
+            $percentage >= 85 => 'B+',
+            $percentage >= 80 => 'B',
+            $percentage >= 75 => 'C+',
+            $percentage >= 70 => 'C',
+            $percentage >= 65 => 'D+',
+            $percentage >= 60 => 'D',
+            default => 'F',
+        };
+    }
+
+    public function gradeBadgeClass(): string
+    {
+        return match ($this->letterGrade()) {
+            'A+', 'A' => 'success',
+            'B+', 'B' => 'primary',
+            'C+', 'C' => 'info',
+            'D+', 'D' => 'warning',
+            default => 'danger',
+        };
     }
 }

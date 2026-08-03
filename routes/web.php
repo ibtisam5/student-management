@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\GradeController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\StudentController;
@@ -17,3 +17,4 @@ Route::resource('students', StudentController::class);
 Route::resource('courses', CourseController::class);
 Route::resource('enrollments', EnrollmentController::class);
 Route::resource('attendances', AttendanceController::class);
+Route::resource('grades', GradeController::class);
