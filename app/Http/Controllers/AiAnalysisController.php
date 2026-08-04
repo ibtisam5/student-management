@@ -23,15 +23,19 @@ class AiAnalysisController extends Controller
             ->latest();
 
         if ($request->filled('search')) {
-            $search = $request->string('search')
-                ->trim()
-                ->toString();
+            $search = trim(
+                $request->string('search')->toString()
+            );
 
             $query->whereHas(
                 'student',
-                function ($studentQuery) use ($search) {
+                function ($studentQuery) use ($search): void {
                     $studentQuery
-                        ->where('full_name', 'like', "%{$search}%")
+                        ->where(
+                            'full_name',
+                            'like',
+                            "%{$search}%"
+                        )
                         ->orWhere(
                             'student_number',
                             'like',
@@ -49,7 +53,9 @@ class AiAnalysisController extends Controller
         if ($request->filled('analysis_type')) {
             $query->where(
                 'analysis_type',
-                $request->analysis_type
+                $request->string(
+                    'analysis_type'
+                )->toString()
             );
         }
 
@@ -60,10 +66,11 @@ class AiAnalysisController extends Controller
         $totalAnalyses = AiAnalysis::count();
 
         $analyzedStudents = AiAnalysis::query()
-            ->distinct('student_id')
+            ->distinct()
             ->count('student_id');
 
         $latestAnalysis = AiAnalysis::query()
+            ->with('student')
             ->latest()
             ->first();
 
@@ -82,7 +89,9 @@ class AiAnalysisController extends Controller
             ->orderBy('full_name')
             ->get();
 
-        $selectedStudentId = $request->integer('student_id');
+        $selectedStudentId = $request->integer(
+            'student_id'
+        );
 
         return view('ai-analyses.create', compact(
             'students',
@@ -90,8 +99,9 @@ class AiAnalysisController extends Controller
         ));
     }
 
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(
+        Request $request
+    ): RedirectResponse {
         $validated = $request->validate([
             'student_id' => [
                 'required',
@@ -102,72 +112,45 @@ class AiAnalysisController extends Controller
             'analysis_type' => [
                 'required',
                 'string',
-                'max:100',
+                'in:Comprehensive Analysis,Academic Performance,Attendance Risk',
             ],
         ]);
 
         $student = Student::query()
             ->findOrFail($validated['student_id']);
 
-        $result = $this->analysisService->analyze($student);
+        $result = $this->analysisService
+            ->analyze($student);
 
-        $inputSummary = sprintf(
-            'Student: %s | Student Number: %s | Major: %s | Attendance Rate: %.2f%% | Average Grade: %.2f%% | Risk Level: %s',
-            $student->full_name,
-            $student->student_number,
-            $student->major,
-            $result['attendance_rate'],
-            $result['average_grade'],
-            $result['risk_level']
+        $analysis = AiAnalysis::create(
+            $this->analysisPayload(
+                $student,
+                $validated['analysis_type'],
+                $result
+            )
         );
-
-        $analysis = AiAnalysis::create([
-            'student_id' => $student->id,
-            'analysis_type' => $validated['analysis_type'],
-            'input_summary' => $inputSummary,
-            'analysis' => $result['analysis'],
-            'recommendations' => $result['recommendations'],
-            'provider' => 'Internal Rules Engine',
-            'model' => 'Student Analysis Engine v1',
-        ]);
 
         return redirect()
             ->route('ai-analyses.show', $analysis)
             ->with(
                 'success',
-                'Student analysis generated successfully.'
+                'Structured student analysis generated successfully.'
             );
     }
 
-    public function show(AiAnalysis $aiAnalysis): View
-    {
+    public function show(
+        AiAnalysis $aiAnalysis
+    ): View {
         $aiAnalysis->load([
+            'student.enrollments.course',
             'student.enrollments.grades',
             'student.enrollments.attendances',
-            'student.enrollments.course',
         ]);
 
-        $student = $aiAnalysis->student;
-
-        $currentResult = $this->analysisService->analyze($student);
-
-        $enrollmentsCount = $student->enrollments->count();
-
-        $gradesCount = $student->enrollments
-            ->flatMap(fn ($enrollment) => $enrollment->grades)
-            ->count();
-
-        $attendanceRecordsCount = $student->enrollments
-            ->flatMap(fn ($enrollment) => $enrollment->attendances)
-            ->count();
-
-        return view('ai-analyses.show', compact(
-            'aiAnalysis',
-            'currentResult',
-            'enrollmentsCount',
-            'gradesCount',
-            'attendanceRecordsCount'
-        ));
+        return view(
+            'ai-analyses.show',
+            compact('aiAnalysis')
+        );
     }
 
     public function regenerate(
@@ -175,25 +158,16 @@ class AiAnalysisController extends Controller
     ): RedirectResponse {
         $student = $aiAnalysis->student;
 
-        $result = $this->analysisService->analyze($student);
+        $result = $this->analysisService
+            ->analyze($student);
 
-        $inputSummary = sprintf(
-            'Student: %s | Student Number: %s | Major: %s | Attendance Rate: %.2f%% | Average Grade: %.2f%% | Risk Level: %s',
-            $student->full_name,
-            $student->student_number,
-            $student->major,
-            $result['attendance_rate'],
-            $result['average_grade'],
-            $result['risk_level']
+        $aiAnalysis->update(
+            $this->analysisPayload(
+                $student,
+                $aiAnalysis->analysis_type,
+                $result
+            )
         );
-
-        $aiAnalysis->update([
-            'input_summary' => $inputSummary,
-            'analysis' => $result['analysis'],
-            'recommendations' => $result['recommendations'],
-            'provider' => 'Internal Rules Engine',
-            'model' => 'Student Analysis Engine v1',
-        ]);
 
         return redirect()
             ->route('ai-analyses.show', $aiAnalysis)
@@ -214,5 +188,52 @@ class AiAnalysisController extends Controller
                 'success',
                 'Analysis deleted successfully.'
             );
+    }
+
+    private function analysisPayload(
+        Student $student,
+        string $analysisType,
+        array $result
+    ): array {
+        $inputSummary = sprintf(
+            'Student: %s | Student Number: %s | Major: %s | Average Grade: %.1f%% | Attendance Rate: %.1f%% | Risk: %s',
+            $student->full_name,
+            $student->student_number,
+            $student->major,
+            $result['average_grade'],
+            $result['attendance_rate'],
+            $result['risk_level']
+        );
+
+        return [
+            'student_id' => $student->id,
+
+            'analysis_type' => $analysisType,
+
+            'input_summary' => $inputSummary,
+
+            'analysis' => $result['analysis'],
+
+            'recommendations' =>
+                $result['recommendations'],
+
+            'performance_summary' =>
+                $result['performance_summary'],
+
+            'strengths' => $result['strengths'],
+
+            'weaknesses' => $result['weaknesses'],
+
+            'risk_level' => $result['risk_level'],
+
+            'prediction' => $result['prediction'],
+
+            'metrics' => $result['metrics'],
+
+            'provider' => 'Internal Rules Engine',
+
+            'model' =>
+                'Academic Recommendation Engine v2',
+        ];
     }
 }
