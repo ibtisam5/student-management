@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AiAnalysis;
 use App\Models\Student;
 use App\Services\StudentAnalysisService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AiAnalysisController extends Controller
@@ -31,11 +33,7 @@ class AiAnalysisController extends Controller
                 'student',
                 function ($studentQuery) use ($search): void {
                     $studentQuery
-                        ->where(
-                            'full_name',
-                            'like',
-                            "%{$search}%"
-                        )
+                        ->where('full_name', 'like', "%{$search}%")
                         ->orWhere(
                             'student_number',
                             'like',
@@ -53,9 +51,7 @@ class AiAnalysisController extends Controller
         if ($request->filled('analysis_type')) {
             $query->where(
                 'analysis_type',
-                $request->string(
-                    'analysis_type'
-                )->toString()
+                $request->string('analysis_type')->toString()
             );
         }
 
@@ -89,9 +85,7 @@ class AiAnalysisController extends Controller
             ->orderBy('full_name')
             ->get();
 
-        $selectedStudentId = $request->integer(
-            'student_id'
-        );
+        $selectedStudentId = $request->integer('student_id');
 
         return view('ai-analyses.create', compact(
             'students',
@@ -99,9 +93,8 @@ class AiAnalysisController extends Controller
         ));
     }
 
-    public function store(
-        Request $request
-    ): RedirectResponse {
+    public function store(Request $request): RedirectResponse
+    {
         $validated = $request->validate([
             'student_id' => [
                 'required',
@@ -119,8 +112,7 @@ class AiAnalysisController extends Controller
         $student = Student::query()
             ->findOrFail($validated['student_id']);
 
-        $result = $this->analysisService
-            ->analyze($student);
+        $result = $this->analysisService->analyze($student);
 
         $analysis = AiAnalysis::create(
             $this->analysisPayload(
@@ -138,9 +130,8 @@ class AiAnalysisController extends Controller
             );
     }
 
-    public function show(
-        AiAnalysis $aiAnalysis
-    ): View {
+    public function show(AiAnalysis $aiAnalysis): View
+    {
         $aiAnalysis->load([
             'student.enrollments.course',
             'student.enrollments.grades',
@@ -158,8 +149,7 @@ class AiAnalysisController extends Controller
     ): RedirectResponse {
         $student = $aiAnalysis->student;
 
-        $result = $this->analysisService
-            ->analyze($student);
+        $result = $this->analysisService->analyze($student);
 
         $aiAnalysis->update(
             $this->analysisPayload(
@@ -175,6 +165,26 @@ class AiAnalysisController extends Controller
                 'success',
                 'Student analysis regenerated successfully.'
             );
+    }
+
+    public function downloadPdf(AiAnalysis $aiAnalysis)
+    {
+        $aiAnalysis->load('student');
+
+        $studentName = $aiAnalysis->student?->full_name
+            ?? 'student';
+
+        $filename = Str::slug($studentName)
+            . '-academic-intelligence-report.pdf';
+
+        return Pdf::loadView(
+            'ai-analyses.pdf',
+            [
+                'analysis' => $aiAnalysis,
+            ]
+        )
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
     }
 
     public function destroy(
@@ -207,33 +217,19 @@ class AiAnalysisController extends Controller
 
         return [
             'student_id' => $student->id,
-
             'analysis_type' => $analysisType,
-
             'input_summary' => $inputSummary,
-
             'analysis' => $result['analysis'],
-
-            'recommendations' =>
-                $result['recommendations'],
-
+            'recommendations' => $result['recommendations'],
             'performance_summary' =>
                 $result['performance_summary'],
-
             'strengths' => $result['strengths'],
-
             'weaknesses' => $result['weaknesses'],
-
             'risk_level' => $result['risk_level'],
-
             'prediction' => $result['prediction'],
-
             'metrics' => $result['metrics'],
-
             'provider' => 'Internal Rules Engine',
-
-            'model' =>
-                'Academic Recommendation Engine v2',
+            'model' => 'Academic Recommendation Engine v2',
         ];
     }
 }

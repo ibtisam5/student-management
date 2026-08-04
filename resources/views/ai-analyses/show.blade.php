@@ -30,8 +30,7 @@
         .metric-card {
             border: 0;
             border-radius: 20px;
-            box-shadow:
-                0 10px 32px rgba(29, 48, 85, 0.08);
+            box-shadow: 0 10px 32px rgba(29, 48, 85, 0.08);
         }
 
         .metric-card {
@@ -136,6 +135,13 @@
         </div>
 
         <div class="d-flex flex-wrap gap-2">
+
+            <a
+                href="{{ route('ai-analyses.pdf', $aiAnalysis) }}"
+                class="btn btn-success"
+            >
+                Download PDF
+            </a>
 
             <form
                 method="POST"
@@ -375,7 +381,10 @@
                     </h3>
 
                     <p class="fs-5 lh-lg mb-0">
-                        {{ $aiAnalysis->prediction }}
+                        {{
+                            $aiAnalysis->prediction
+                            ?? 'No prediction is currently available.'
+                        }}
                     </p>
 
                 </div>
@@ -413,6 +422,9 @@
                             role="progressbar"
                             style="width:
                                 {{ min($riskScore, 100) }}%"
+                            aria-valuenow="{{ min($riskScore, 100) }}"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
                         ></div>
 
                     </div>
@@ -433,6 +445,24 @@
                     <h4 class="fw-bold mb-3">
                         Data Used
                     </h4>
+
+                    <div class="information-row">
+                        <div
+                            class="d-flex
+                                   justify-content-between"
+                        >
+                            <span class="text-muted">
+                                Registered courses
+                            </span>
+
+                            <strong>
+                                {{
+                                    $metrics['enrollments_count']
+                                    ?? 0
+                                }}
+                            </strong>
+                        </div>
+                    </div>
 
                     <div class="information-row">
                         <div
@@ -566,9 +596,7 @@
                     <p class="fw-semibold mb-0">
                         {{
                             $aiAnalysis->updated_at
-                                ->format(
-                                    'd F Y, h:i A'
-                                )
+                                ->format('d F Y, h:i A')
                         }}
                     </p>
 

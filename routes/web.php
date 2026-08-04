@@ -31,6 +31,15 @@ Route::post(
     '/ai-analyses/{aiAnalysis}/regenerate',
     [AiAnalysisController::class, 'regenerate']
 )->name('ai-analyses.regenerate');
+Route::post(
+    '/ai-analyses/{aiAnalysis}/regenerate',
+    [AiAnalysisController::class, 'regenerate']
+)->name('ai-analyses.regenerate');
+
+Route::get(
+    '/ai-analyses/{aiAnalysis}/pdf',
+    [AiAnalysisController::class, 'downloadPdf']
+)->name('ai-analyses.pdf');
 
 Route::resource(
     'ai-analyses',
