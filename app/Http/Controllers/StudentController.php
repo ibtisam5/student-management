@@ -148,9 +148,9 @@ public function exportCsv()
      * Display the specified resource.
      */
     public function show(Student $student)
-    {
-        //
-    }
+{
+    return view('students.show', compact('student'));
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -159,6 +159,7 @@ public function exportCsv()
 {
     return view('students.edit', compact('student'));
 }
+
     /**
      * Update the specified resource in storage.
      */
