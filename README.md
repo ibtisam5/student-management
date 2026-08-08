@@ -1,139 +1,52 @@
 # 🎓 Student Management System
 
-<p align="center">
-  <img src="screenshots/project-cover.png" alt="Student Management System" width="100%">
-</p>
+A modern web-based Student Management System built with Laravel for managing student records, academic information, and student status through a clean and responsive interface.
 
-<p align="center">
+## ✨ Features
 
-![Laravel](https://img.shields.io/badge/Laravel-12-red?style=for-the-badge&logo=laravel)
-![PHP](https://img.shields.io/badge/PHP-8.3-blue?style=for-the-badge&logo=php)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5-purple?style=for-the-badge&logo=bootstrap)
-![MySQL](https://img.shields.io/badge/MySQL-Database-blue?style=for-the-badge&logo=mysql)
+- Student dashboard with key statistics
+- Add, view, edit, and delete student records
+- Search students by name, student number, email, or major
+- Filter students by status
+- Student profile page
+- Active and inactive student tracking
+- Academic year and major management
+- Student image upload
+- Pagination and sorting
+- Export student records to CSV
+- Responsive and modern user interface
+- Authentication and protected dashboard
 
-</p>
+## 🛠️ Technologies Used
 
----
+- Laravel
+- PHP
+- Blade
+- MySQL
+- HTML5
+- CSS3
+- JavaScript
+- Tailwind CSS
+- Bootstrap Icons
+- Vite
 
-# 📖 About
+## 📸 Screenshots
 
-Student Management System is a modern CRUD web application built with **Laravel 12** to simplify student record management.
+### Students Dashboard
 
-The application allows administrators to create, update, search, filter, sort, and export student records while providing a clean dashboard with useful statistics.
+_Add dashboard screenshot here._
 
----
+### Student Profile
 
-# ✨ Features
+_Add student profile screenshot here._
 
-- ✅ Create Student
-- ✅ Update Student
-- ✅ Delete Student
-- ✅ Search Students
-- ✅ Filter by Status
-- ✅ Sort by Student Number
-- ✅ Dashboard Statistics
-- ✅ Pagination
-- ✅ CSV Export
-- ✅ Responsive UI
+### Add / Edit Student
 
----
+_Add form screenshot here._
 
-# 🛠 Tech Stack
+## 🚀 Installation
 
-| Technology | Version |
-|------------|----------|
-| Laravel | 12 |
-| PHP | 8.3 |
-| Bootstrap | 5 |
-| MySQL | 8 |
-| Blade | Laravel |
-| Eloquent ORM | Laravel |
-
----
-
-# 📸 Screenshots
-
-## 🏠 Dashboard
-
-<img src="screenshots/dashboard.png" width="100%">
-
----
-
-## ➕ Add Student
-
-<img src="screenshots/add-student.png" width="100%">
-
----
-
-## ✏️ Edit Student
-
-<img src="screenshots/edit-student.png" width="100%">
-
----
-
-## 🔍 Search & Filter
-
-<img src="screenshots/search-filter.png" width="100%">
-
----
-
-## 📄 CSV Export
-
-<img src="screenshots/export-csv.png" width="100%">
-
----
-
-# 🚀 Installation
+Clone the repository:
 
 ```bash
 git clone https://github.com/ibtisam5/student-management.git
-
-cd student-management
-
-composer install
-
-cp .env.example .env
-
-php artisan key:generate
-
-php artisan migrate
-
-php artisan serve
-```
-
----
-
-# 📂 Project Structure
-
-```
-app/
-database/
-resources/
-routes/
-storage/
-tests/
-```
-
----
-
-# 👩‍💻 Author
-
-**Ibtisam Al Rawahi**
-
-- Computer Engineering Graduate
-- Laravel Developer
-- AI Content Creator
-
-GitHub:
-
-https://github.com/ibtisam5
-
-LinkedIn:
-
-https://www.linkedin.com/
-
----
-
-# ⭐ Support
-
-If you found this project useful, consider giving it a ⭐ on GitHub.
