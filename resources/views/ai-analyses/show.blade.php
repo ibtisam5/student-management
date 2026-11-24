@@ -373,7 +373,7 @@
                         class="text-primary
                                fw-semibold mb-2"
                     >
-                        RULE-BASED PREDICTION
+                        {{ str_contains($aiAnalysis->provider ?? '', 'Claude') ? 'AI-GENERATED PREDICTION' : 'RULE-BASED PREDICTION' }}
                     </p>
 
                     <h3 class="fw-bold mb-3">

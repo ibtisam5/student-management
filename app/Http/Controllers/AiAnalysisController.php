@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AiAnalysis;
 use App\Models\Student;
+use App\Services\AiNarrativeService;
 use App\Services\StudentAnalysisService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,8 @@ use Illuminate\View\View;
 class AiAnalysisController extends Controller
 {
     public function __construct(
-        private readonly StudentAnalysisService $analysisService
+        private readonly StudentAnalysisService $analysisService,
+        private readonly AiNarrativeService $narrativeService
     ) {
     }
 
@@ -215,7 +217,7 @@ class AiAnalysisController extends Controller
             $result['risk_level']
         );
 
-        return [
+        $payload = [
             'student_id' => $student->id,
             'analysis_type' => $analysisType,
             'input_summary' => $inputSummary,
@@ -231,5 +233,25 @@ class AiAnalysisController extends Controller
             'provider' => 'Internal Rules Engine',
             'model' => 'Academic Recommendation Engine v2',
         ];
+
+        // Metrics and risk level stay rule-based; Claude writes the report text.
+        $narrative = $this->narrativeService->write(
+            $student,
+            $analysisType,
+            $result
+        );
+
+        if ($narrative !== null) {
+            $payload['performance_summary'] = $narrative['performance_summary'];
+            $payload['analysis'] = $narrative['performance_summary'];
+            $payload['strengths'] = $narrative['strengths'];
+            $payload['weaknesses'] = $narrative['weaknesses'];
+            $payload['recommendations'] = implode(' ', $narrative['recommendations']);
+            $payload['prediction'] = $narrative['prediction'];
+            $payload['provider'] = 'Anthropic Claude + Rules Engine';
+            $payload['model'] = $this->narrativeService->model();
+        }
+
+        return $payload;
     }
 }
